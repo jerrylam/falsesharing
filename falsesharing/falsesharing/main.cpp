@@ -10,6 +10,7 @@
 #include <thread>
 #include <vector>
 #include <ctime>
+#include <unordered_map>
 
 using namespace std;
 
@@ -20,10 +21,7 @@ const int NO_SHARING_SIZE = 16;
 void work(int* ptr, int parallelism)
 {
     auto n = (WORKLOAD / parallelism);
-    for (int i = 0; i < n; ++i)
-    {
-        (*ptr)++;
-    }
+    for (int i = 0; i < n; ++i)(*ptr)++;
 }
 
 void benchmark(int cache[], int parallelism, int padding) {
@@ -39,19 +37,19 @@ void benchmark(int cache[], int parallelism, int padding) {
 }
 
 int main(int argc, const char * argv[]) {
-    
+    unordered_map<std::string, int> topicMap;
     unsigned cores = thread::hardware_concurrency();
-    int pads[2] = {NO_SHARING_SIZE, FALSE_SHARING_SIZE};
-    
-    for(const auto& pad: pads) {
-        for(int i =1; i <=cores; ++i) {
-            alignas(64) unique_ptr<int[]> arr(new int[i * pad]);
+    topicMap["NO_SHARING"] = NO_SHARING_SIZE;
+    topicMap["FALSE_SHARING"] = FALSE_SHARING_SIZE;
+    for(const auto& entry: topicMap) {
+        for(int i =1; i <cores; ++i) {
+            alignas(64) unique_ptr<int[]> arr(new int[i * entry.second]);
             auto start = std::chrono::high_resolution_clock::now();
-            benchmark(arr.get(), i, pad);
+            benchmark(arr.get(), i, entry.second);
             auto end = chrono::high_resolution_clock::now();
             auto nano = chrono::duration_cast<chrono::milliseconds>(end - start).count();
             cout << "=============================" << endl;
-            cout << "Parallelism: " << i << ", pad size:" << pad << endl;
+            cout << "Parallelism: " << i << ", Type:" << entry.first << endl;
             cout << "Duration (milliseconds): " << nano << endl;
         }
     }
