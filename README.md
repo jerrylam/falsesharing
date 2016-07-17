@@ -1,3 +1,6 @@
+# Disclaimer
+I wrote this at work for fun but at the end I want to keep it so here it is.
+
 # False Sharing Performance Demonstration
 This docker image will demonstrate the effect of false sharing for a multithread program. 
 
